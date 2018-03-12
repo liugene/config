@@ -13,7 +13,10 @@
 // +----------------------------------------------------------------------
 
 namespace linkphp\config;
-class Config
+
+use linkphp\interfaces\ConfigInterface;
+
+class Config implements ConfigInterface
 {
 
     private $platform;
@@ -49,7 +52,7 @@ class Config
         return;
     }
 
-    static public function set($name='')
+    static public function set($name)
     {
         if(is_object($name)) return self::instance();
         $config = require self::$load_path . 'configure.php';
