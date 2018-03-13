@@ -19,6 +19,11 @@ use linkphp\interfaces\ConfigInterface;
 class Config implements ConfigInterface
 {
 
+    /**
+     * @var Parser
+     */
+    private static $_parser;
+
     private $platform;
 
     private static $load_path = LOAD_PATH;
@@ -28,9 +33,14 @@ class Config implements ConfigInterface
 
     static private $instance;
 
+    public function __construct(Parser $parser)
+    {
+        self::$_parser = $parser;
+    }
+
     static public function instance()
     {
-        if(is_null(self::$instance)) self::$instance = new self();
+        if(is_null(self::$instance)) self::$instance = new self(new Parser());
 
         return self::$instance;
     }
@@ -48,15 +58,23 @@ class Config implements ConfigInterface
 
     static public function import($file)
     {
-        if(is_array($file)) self::$config = $file;
+        if(is_array($file)) {
+            self::$config = $file;
+            return;
+        }
+        self::set($file);
         return;
     }
 
-    static public function set($name)
+    static public function set($name,$value=null,$type='')
     {
         if(is_object($name)) return self::instance();
-        $config = require self::$load_path . 'configure.php';
-        self::$config = array_merge(self::$config,$config);
+
+        if(is_array($name)){
+            if (empty($type)) $type = pathinfo($name, PATHINFO_EXTENSION);
+            $config = self::$_parser->parser($type,$name);
+            self::$config = array_merge(self::$config,$config);
+        }
     }
 
     public function setPlatform($platform)
