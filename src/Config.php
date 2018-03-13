@@ -26,7 +26,7 @@ class Config implements ConfigInterface
 
     private $platform;
 
-    private static $load_path = LOAD_PATH;
+    private static $load_path;
 
     //保存已经加载的配置信息
     static private $config = [];
