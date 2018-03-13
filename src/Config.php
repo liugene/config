@@ -70,7 +70,7 @@ class Config implements ConfigInterface
     {
         if(is_object($name)) return self::instance();
 
-        if(is_array($name)){
+        if(is_null($value)){
             if (empty($type)) $type = pathinfo($name, PATHINFO_EXTENSION);
             $config = self::$_parser->parser($type,$name);
             self::$config = array_merge(self::$config,$config);
