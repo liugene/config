@@ -22,58 +22,47 @@ class Config implements ConfigInterface
     /**
      * @var Parser
      */
-    private static $_parser;
+    private $_parser;
 
     private $platform;
 
-    private static $load_path;
+    private $load_path;
 
     //保存已经加载的配置信息
-    static private $config = [];
-
-    static private $instance;
+    private $config = [];
 
     public function __construct(Parser $parser)
     {
-        self::$_parser = $parser;
-    }
-
-    static public function instance()
-    {
-        if(is_null(self::$instance)) self::$instance = new self(new Parser());
-
-        return self::$instance;
+        $this->_parser = $parser;
     }
 
     public function setLoadPath($path)
     {
-        self::$load_path = $path;
+        $this->load_path = $path;
         return $this;
     }
 
     public function getLoadPath()
     {
-        return self::$load_path;
+        return $this->load_path;
     }
 
-    static public function import($file)
+    public function import($file)
     {
         if(is_array($file)) {
-            self::$config = $file;
-            return;
+            $this->config = $file;
+            return $this;
         }
-        self::set($file);
-        return;
+        $this->set($file);
+        return $this;
     }
 
-    static public function set($name,$value=null,$type='')
+    public function set($name,$value=null,$type='')
     {
-        if(is_object($name)) return self::instance();
-
         if(is_null($value)){
             if (empty($type)) $type = pathinfo($name, PATHINFO_EXTENSION);
-            $config = self::$_parser->parser($type,$name);
-            self::$config = array_merge(self::$config,$config);
+            $config = $this->_parser->parser($type,$name);
+            $this->config = array_merge($this->config,$config);
         }
     }
 
@@ -95,10 +84,10 @@ class Config implements ConfigInterface
      * 分组扩展配置的值不会被之后加载进来的配置值覆盖，当应用模块中的键名不存在
      * 然后加载LinkPHP框架系统配置 -> 网站公共配置
      */
-    static public function get($name, $value = null)
+    public function get($name, $value = null)
     {
-        if(array_key_exists($name, self::$config)){
-            $value = self::$config[strtolower($name)];
+        if(array_key_exists($name, $this->config)){
+            $value = $this->config[strtolower($name)];
         }
         return $value;
     }
@@ -109,14 +98,14 @@ class Config implements ConfigInterface
      * @param  string $name 配置参数名（支持二级配置 . 号分割）
      * @return bool
      */
-    static public function has($name)
+    public function has($name)
     {
         if (!strpos($name, '.')) {
-            return isset(self::$config[strtolower($name)]);
+            return isset($this->config[strtolower($name)]);
         }
 
         // 二维数组设置和获取支持
         $name = explode('.', $name, 2);
-        return isset(self::$config[strtolower($name[0])][$name[1]]);
+        return isset($this->config[strtolower($name[0])][$name[1]]);
     }
 }
