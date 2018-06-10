@@ -14,7 +14,7 @@
 
 namespace linkphp\config;
 
-use linkphp\interfaces\ConfigInterface;
+use framework\interfaces\ConfigInterface;
 
 class Config implements ConfigInterface
 {
@@ -57,13 +57,49 @@ class Config implements ConfigInterface
         return $this;
     }
 
-    public function set($name,$value=null,$type='')
+    public function complete()
     {
-        if(is_null($value)){
+        if(is_dir($this->load_path)){
+            $handle = opendir($this->load_path);
+            while( ($filename = readdir($handle)) !== false )
+            {
+//                if($filename != '.' && $filename != '..')
+//                {
+//                    //这里简单的用echo来输出文件名
+//                    dump($filename);
+//                }
+                if(is_file($this->load_path . $filename)){
+                    list($scope, $ext) = explode('.', $filename, 2);
+                    $content = $this->load_path . $filename;
+                    if($scope == 'configure'){
+                        $this->set($content);
+                    }
+                    $this->set($content, $scope);
+                }
+            }
+        }
+    }
+
+    private function setScope($scope,$value)
+    {
+        $this->config[$scope] = $value;
+    }
+
+    private function hasScope($scope)
+    {
+        return isset($this->config[$scope]);
+    }
+
+    public function set($name,$scope=null,$type='')
+    {
+        if(is_null($scope)){
             if (empty($type)) $type = pathinfo($name, PATHINFO_EXTENSION);
             $config = $this->_parser->parser($type,$name);
             $this->config = array_merge($this->config,$config);
+            return;
         }
+        $this->setScope($scope, $name);
+        return;
     }
 
     public function setPlatform($platform)
@@ -84,12 +120,19 @@ class Config implements ConfigInterface
      * 分组扩展配置的值不会被之后加载进来的配置值覆盖，当应用模块中的键名不存在
      * 然后加载LinkPHP框架系统配置 -> 网站公共配置
      */
-    public function get($name, $value = null)
+    public function get($name = null, $value = null)
     {
-        if(array_key_exists($name, $this->config)){
-            $value = $this->config[strtolower($name)];
+        if(!isset($name)) {
+            return $this->config;
         }
-        return $value;
+
+        if (!strpos($name, '.')) {
+            return $this->config[strtolower($name)];
+        }
+
+        // 二维数组设置和获取支持
+        $name = explode('.', $name, 2);
+        return $this->config[strtolower($name[0])][$name[1]];
     }
 
     /**
