@@ -80,9 +80,15 @@ class Config implements ConfigInterface
         }
     }
 
-    private function setScope($scope,$value)
+    private function setScope($scope,$value, $type)
     {
-        $this->config[$scope] = $value;
+        if (empty($type)) $type = pathinfo($value, PATHINFO_EXTENSION);
+        $config = $this->_parser->parser($type,$value);
+        if(isset($this->config[$scope])){
+            $this->config[$scope] = array_merge($this->config[$scope],$config);
+            return true;
+        }
+        $this->config[$scope] = $config;
     }
 
     private function hasScope($scope)
@@ -98,7 +104,7 @@ class Config implements ConfigInterface
             $this->config = array_merge($this->config,$config);
             return;
         }
-        $this->setScope($scope, $name);
+        $this->setScope($scope, $name, $type);
         return;
     }
 
@@ -132,7 +138,7 @@ class Config implements ConfigInterface
 
         // 二维数组设置和获取支持
         $name = explode('.', $name, 2);
-        return $this->config[strtolower($name[0])][$name[1]];
+        return '' === $name[1] ? $this->config[strtolower($name[0])] : $this->config[strtolower($name[0])][$name[1]];
     }
 
     /**
