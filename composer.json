@@ -14,7 +14,7 @@
   },
   "autoload": {
     "psr-4": {
-      "link\\config\\": "src"
+      "linkphp\\config\\": "src"
     }
   }
 }
